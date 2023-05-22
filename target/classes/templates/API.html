@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <title>Java API WordCloud</title>
+    <!-- 引入 ECharts -->
+    <script src="https://cdn.jsdelivr.net/npm/echarts/dist/echarts.min.js"></script>
+    <!-- 引入 echarts-wordcloud 组件 -->
+    <script src="https://cdn.jsdelivr.net/npm/echarts-wordcloud/dist/echarts-wordcloud.min.js"></script>
+</head>
+
+<body style="text-align: center">
+<h1>API Word Cloud</h1>
+<div id="api-wordcloud" style="width: 1280px;height: 600px;"></div>
+<script type="text/javascript">
+    // 基于准备好的dom，初始化echarts实例
+    var myChart = echarts.init(document.getElementById('api-wordcloud'));
+
+    // 调用后端接口获取数据
+    fetch('/active-apis').then(function (response) {
+        // 将响应解析为JSON对象
+        return response.json();
+    }).then(function (json) {
+        // 构造词云数据
+        var data = [];
+        var keys = Object.keys(json);
+        for (var i = 0; i < 20; i++) { // 只取前20条数据
+            var key = keys[i];
+            var color = 'rgb(' + Math.floor(Math.random() * 256) + ',' + Math.floor(Math.random() * 256) + ',' + Math.floor(Math.random() * 256) + ')';
+            data.push({
+                name: key,
+                value: json[key],
+                textStyle: {
+                    color: color
+                }
+            });
+        }
+
+        // 绘制词云图
+        myChart.setOption({
+            series: [{
+                type: 'wordCloud',
+                shape: 'circle',
+                sizeRange: [20, 100],
+                textPadding: 0,
+                autoSize: {
+                    enable: true,
+                    minSize: 20
+                },
+                gridSize: 2,
+                rotationRange: [-45, 45],
+                textStyle: {
+                    normal: {
+                        fontFamily: 'sans-serif',
+                        fontWeight: 'bold',
+                        color: function () {
+                            return 'rgb(' + [
+                                Math.round(Math.random() * 160),
+                                Math.round(Math.random() * 160),
+                                Math.round(Math.random() * 160)
+                            ].join(',') + ')';
+                        }
+                    }
+                },
+                data: data
+            }],
+            grid: {
+                top: 'middle',
+                left: 'center',
+                width: '70%',
+                height: '80%'
+            }
+        });
+    });
+</script>
+</body>
+
+</html>

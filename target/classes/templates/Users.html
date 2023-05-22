@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Users</title>
+    <script src="https://cdn.jsdelivr.net/npm/jquery"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        table {
+            width: 100%;
+            margin-bottom: 1rem;
+            background-color: transparent;
+            text-align: center;
+        }
+        table td {
+            padding: 0.75rem;
+            vertical-align: middle;
+            border-top: 1px solid #dee2e6;
+        }
+        table th {
+            border-bottom: 2px solid #dee2e6;
+        }
+        .table-hover tbody tr:hover {
+            background-color: rgba(0, 0, 0, 0.075);
+        }
+    </style>
+</head>
+<body style="text-align: center">
+<h1>User Distribution In Thread Discussions</h1>
+<div style="display: flex;">
+    <div style="flex: 1;">
+        <h3>How Many Post Answer</h3>
+        <canvas id="answer-chart" width="300" height="225"></canvas>
+    </div>
+
+    <div style="flex: 1;">
+        <h3>How Many Post Comment</h3>
+        <canvas id="comment-chart" width="300" height="228"></canvas>
+    </div>
+</div>
+<h1>User activity ranking</h1>
+<div style="display: flex;">
+    <table>
+        <thead>
+        <tr>
+            <th>Ranking</th>
+            <th>User</th>
+            <th>Activity</th>
+        </tr>
+        </thead>
+        <tbody id="active-users"></tbody>
+    </table>
+</div>
+
+
+<script>
+    $(document).ready(function () {
+        // 获取回答者的参与Thread讨论的用户数量分布
+        $.get("/answer-distribution", function (data) {
+            var answerLabels = Object.keys(data);
+            var answerValues = Object.values(data);
+
+            var answerChart = new Chart($("#answer-chart"), {
+                type: 'bar',
+                data: {
+                    labels: answerLabels,
+                    datasets: [
+                        {
+                            label: 'Count Of Questions With This Number Of Answer Posters',
+                            data: answerValues,
+                            backgroundColor: 'rgba(54, 162, 235, 0.2)',
+                            borderColor: 'rgba(54, 162, 235, 1)',
+                            borderWidth: 1
+                        }
+                    ]
+                },
+                options: {
+                    scales: {
+                        yAxes: [{
+                            ticks: {
+                                beginAtZero: true
+                            }
+                        }]
+                    }
+                }
+            });
+        });
+
+        // 获取评论者的参与Thread讨论的用户数量分布
+        $.get("/comment-distribution", function (data) {
+            var commentLabels = Object.keys(data);
+            var commentValues = Object.values(data);
+
+            var commentChart = new Chart($("#comment-chart"), {
+                type: 'bar',
+                data: {
+                    labels: commentLabels,
+                    datasets: [
+                        {
+                            label: 'Count Of Questions With This Number Of Comment Posters',
+                            data: commentValues,
+                            backgroundColor: 'rgba(255, 99, 132, 0.2)',
+                            borderColor: 'rgba(255, 99, 132, 1)',
+                            borderWidth: 1
+                        }
+                    ]
+                },
+                options: {
+                    scales: {
+                        yAxes: [{
+                            ticks: {
+                                beginAtZero: true
+                            }
+                        }]
+                    }
+                }
+            });
+        });
+    });
+    // 获取用户活跃度列表
+    fetch('/active-users-data')
+        .then(response => response.json())
+        .then(data => {
+            // 构造html表格展示数据
+            const tableBody = document.getElementById('active-users');
+            let ranking = 1;
+            for (const [username, activity] of Object.entries(data)) {
+                const row = document.createElement('tr');
+                const rankingCell = document.createElement('td');
+                const userCell = document.createElement('td');
+                const activityCell = document.createElement('td');
+                rankingCell.textContent = ranking;
+                userCell.textContent = username;
+                activityCell.textContent = activity;
+                row.appendChild(rankingCell);
+                row.appendChild(userCell);
+                row.appendChild(activityCell);
+                tableBody.appendChild(row);
+                ranking++;
+            }
+        })
+        .catch(error => console.log(error));
+</script>
+
+</body>
+</html>

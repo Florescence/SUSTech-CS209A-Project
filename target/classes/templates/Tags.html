@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Tags Analysis</title>
+    <!-- 引入 ECharts.js -->
+    <script src="https://cdn.jsdelivr.net/npm/echarts/dist/echarts.min.js"></script>
+    <!-- 引入 jQuery -->
+    <script src="https://cdn.bootcdn.net/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+</head>
+<body style="text-align: center">
+<h1>Tags</h1>
+<!-- 准备饼图展示的 DOM -->
+<div id="tags-pie" style="width: 40%;height:500px;display:inline-block;"></div>
+
+<!-- 准备折线图展示的 DOM -->
+<div id="tags-chart" style="width: 40%;height:500px;display:inline-block;"></div>
+
+<!-- 引入 JavaScript -->
+<script>
+    $(function () {
+        // 发送请求获取数据
+        $.ajax({
+            url: '/tags-with-java', // 后端接口的 URL 地址
+            type: 'GET', // HTTP 请求类型
+            dataType: 'json', // 期望的响应数据类型
+            success: function (data) { // 成功获取后端数据后的回调函数
+
+                // 使用ECharts绘制图形
+                var chart = echarts.init(document.getElementById('tags-pie'));
+                chart.setOption({
+                    title: {
+                        text: 'Tags with Java'
+                    },
+                    tooltip: {},
+                    xAxis: {
+                        type: 'category', // 设置为分类轴类型
+                        data: Object.keys(data), // 使用tags作为横轴
+                        axisLabel: {
+                            interval: 0, // 显示所有标签
+                            rotate: -45 // 旋转角度
+                        }
+                    },
+                    yAxis: {},
+                    series: [{
+                        name: 'Frequency',
+                        type: 'bar',
+                        data: Object.values(data), // 使用频次作为纵轴
+                        barWidth: 20 // 调整条形图宽度
+                    }]
+                });
+            },
+            error: function (err) {
+                console.log(err);
+            }
+        });
+    });
+
+    $(function () {
+        // 发送请求获取数据
+        $.when(
+            $.ajax({
+                url: '/tags-with-high-upvotes', // 后端接口的 URL 地址
+                type: 'GET', // HTTP 请求类型
+                dataType: 'json' // 期望的响应数据类型
+            }),
+            $.ajax({
+                url: '/tags-with-high-views', // 后端接口的 URL 地址
+                type: 'GET', // HTTP 请求类型
+                dataType: 'json' // 期望的响应数据类型
+            })
+        ).done(function (upvotes, views) {
+            // 成功获取后端数据后的回调函数
+
+            // 使用ECharts绘制图形
+            var chart = echarts.init(document.getElementById('tags-chart'));
+            chart.setOption({
+                title: {
+                    text: 'High Upvotes and Views'
+                },
+                tooltip: {
+                    trigger: 'axis',
+                    axisPointer: {
+                        type: 'shadow'
+                    }
+                },
+                legend: {
+                    data: ['Upvotes', 'Views'],
+                    top: 0
+                },
+                xAxis: {
+                    type: 'category',
+                    data: Object.keys(upvotes[0]), // 使用tags作为横轴
+                    axisLabel: {
+                        interval: 0, // 显示所有标签
+                        rotate: -45 // 旋转角度
+                    }
+                },
+                yAxis: [
+                    {
+                        name: 'Upvotes',
+                        type: 'value',
+                        axisLabel:{
+                            formatter: function (value, index){
+                                if (value >= 1000000) {
+                                    return (value / 1000000) + 'M';
+                                } else if (value >= 1000) {
+                                    return (value / 1000) + 'K';
+                                } else {
+                                    return value;
+                                }
+                            }
+                        }
+                    },
+                    {
+                        name: 'Views',
+                        type: 'value',
+                        axisLabel:{
+                            formatter: function (value, index){
+                                if (value >= 1000000) {
+                                    return (value / 1000000) + 'M';
+                                } else if (value >= 1000) {
+                                    return (value / 1000) + 'K';
+                                } else {
+                                    return value;
+                                }
+                            }
+                        }
+                    }
+                ],
+                dataZoom: [
+                    {
+                        type: 'slider',
+                        xAxisIndex: 0,
+                        filterMode: 'empty',
+                        showDetail: false,
+                        handleSize: 14,
+                        start: 0,
+                        end: 100,
+                    }
+                ],
+                series: [
+                    {
+                        name: 'Upvotes',
+                        type: 'line',
+                        yAxisIndex: 0,
+                        data: Object.values(upvotes[0])
+                    },
+                    {
+                        name: 'Views',
+                        type: 'line',
+                        yAxisIndex: 1,
+                        data: Object.values(views[0])
+                    }
+                ]
+            });
+        }).fail(function (jqXHR, textStatus, errorThrown) {
+            console.log('Request failed: ', textStatus, errorThrown.toString());
+        });
+    });
+</script>
+
+</body>
+</html>
